@@ -17,6 +17,8 @@ function open(resultado) {
 
   root.classList.add("is-open");
   root.setAttribute("aria-hidden", "false");
+  // trava o scroll do fundo enquanto o modal estiver aberto
+  document.body.style.overflow = "hidden";
   root.innerHTML = `
     <section class="modal-box" role="dialog" aria-modal="true" aria-label="Resultado da batalha">
       <h2 class="win-title">${titulo}</h2>
@@ -33,6 +35,8 @@ function open(resultado) {
     root.classList.remove("is-open");
     root.setAttribute("aria-hidden", "true");
     root.innerHTML = "";
+    // restaura scroll do body
+    document.body.style.overflow = "";
   };
 
   root.addEventListener(
