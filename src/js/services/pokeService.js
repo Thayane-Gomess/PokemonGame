@@ -1,48 +1,99 @@
 const BASE_URL = "https://pokeapi.co/api/v2/pokemon";
+const TOTAL_POKEMON = 898; // geração 1 a 8
 
+/**
+ * Busca e normaliza um Pokémon da PokeAPI.
+ * @param {string|number} consulta - Nome ou ID do Pokémon
+ * @returns {Promise<Pokemon>}
+ */
 async function getPokemon(consulta) {
   const termo = String(consulta || "").trim().toLowerCase();
-  if (!termo) throw new Error("Digite o nome ou o ID do Pokémon.");
+  if (!termo) {
+    const err = new Error("Digite o nome ou o ID do Pokémon.");
+    err.status = 400;
+    throw err;
+  }
 
   const res = await fetch(`${BASE_URL}/${encodeURIComponent(termo)}`);
-  if (res.status === 404) throw new Error("Pokémon não encontrado.");
-  if (!res.ok) throw new Error("Erro ao buscar Pokémon.");
 
-  return mapPokemon(await res.json());
+  if (res.status === 404) {
+    const err = new Error("Pokémon não encontrado. Verifique o nome ou ID.");
+    err.status = 404;
+    throw err;
+  }
+
+  if (!res.ok) {
+    const err = new Error("Erro ao acessar a PokéAPI. Tente novamente.");
+    err.status = 502;
+    throw err;
+  }
+
+  const dados = await res.json();
+  return normalizar(dados);
 }
 
-function mapPokemon(dados) {
-  const rawStats = Array.isArray(dados?.stats) ? dados.stats : [];
-  const total = rawStats.reduce((acc, s) => acc + (s?.base_stat ?? 0), 0);
+/**
+ * Sorteia e retorna um Pokémon aleatório.
+ * @returns {Promise<Pokemon>}
+ */
+async function getRandomPokemon() {
+  const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
+  return getPokemon(id);
+}
 
-  // Mapeia cada stat individualmente para uso na batalha
+/**
+ * Normaliza os dados brutos da PokéAPI para o formato do simulador.
+ * @param {object} dados - Resposta bruta da PokéAPI
+ * @returns {Pokemon}
+ */
+function normalizar(dados) {
+  // Stats individuais
   const statsMap = {};
-  rawStats.forEach((s) => {
-    const nome = s?.stat?.name;
-    if (nome) statsMap[nome] = s.base_stat ?? 0;
-  });
+  const statsRaw = Array.isArray(dados?.stats) ? dados.stats : [];
 
-  const types = Array.isArray(dados?.types)
+  for (const s of statsRaw) {
+    const nomeStat = s?.stat?.name;
+    if (nomeStat) {
+      statsMap[nomeStat] = s?.base_stat ?? 0;
+    }
+  }
+
+  const total = Object.values(statsMap).reduce((acc, v) => acc + v, 0);
+
+  // Types
+  const tipos = Array.isArray(dados?.types)
     ? dados.types.map((t) => t?.type?.name).filter(Boolean)
     : [];
 
+  // Sprites (inclui extras úteis)
+  const sprites = {
+    frente: dados?.sprites?.front_default ?? null,
+    costas: dados?.sprites?.back_default ?? null,
+    frenteShiny: dados?.sprites?.front_shiny ?? null,
+    artwork:
+      dados?.sprites?.other?.["official-artwork"]?.front_default ?? null,
+  };
+
+  // Cry (som)
+  const cry = dados?.cries?.latest ?? dados?.cries?.legacy ?? null;
+
   return {
     id: dados?.id ?? 0,
-    name: dados?.name ?? "desconhecido",
-    sprite: dados?.sprites?.front_default ?? null,
-    spriteBack: dados?.sprites?.back_default ?? null,
-    spriteShiny: dados?.sprites?.front_shiny ?? null,
-    types,
+    nome: dados?.name ?? "desconhecido",
+    tipos,
+    sprite: sprites.frente, // compatibilidade com quem usa `sprite` direto
+    sprites,
+    cry,
     stats: {
-      total,
       hp: statsMap["hp"] ?? 0,
-      attack: statsMap["attack"] ?? 0,
-      defense: statsMap["defense"] ?? 0,
-      spAttack: statsMap["special-attack"] ?? 0,
-      spDefense: statsMap["special-defense"] ?? 0,
-      speed: statsMap["speed"] ?? 0,
+      ataque: statsMap["attack"] ?? 0,
+      defesa: statsMap["defense"] ?? 0,
+      ataqueEspecial: statsMap["special-attack"] ?? 0,
+      defesaEspecial: statsMap["special-defense"] ?? 0,
+      velocidade: statsMap["speed"] ?? 0,
+      total,
     },
   };
 }
 
-export const pokeService = { getPokemon };
+export { getPokemon, getRandomPokemon };
