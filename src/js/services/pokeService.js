@@ -65,9 +65,10 @@ function normalizar(dados) {
     ? dados.types.map((t) => t?.type?.name).filter(Boolean)
     : [];
 
-  // Sprites
+  // Sprites (inclui extras úteis)
   const sprites = {
     frente: dados?.sprites?.front_default ?? null,
+    costas: dados?.sprites?.back_default ?? null,
     frenteShiny: dados?.sprites?.front_shiny ?? null,
     artwork:
       dados?.sprites?.other?.["official-artwork"]?.front_default ?? null,
@@ -80,7 +81,7 @@ function normalizar(dados) {
     id: dados?.id ?? 0,
     nome: dados?.name ?? "desconhecido",
     tipos,
-    sprite: sprites.frente,
+    sprite: sprites.frente, // compatibilidade com quem usa `sprite` direto
     sprites,
     cry,
     stats: {
