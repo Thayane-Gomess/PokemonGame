@@ -1,26 +1,33 @@
 import { pokeService } from "../services/pokeService.js";
+import { battleEngine } from "../services/battleEngine.js";
+import { battleView } from "../ui/battleView.js";
 
 /**
  * Controller responsável por orquestrar ações da UI e chamadas a serviços.
- * Mantém um estado simples em memória para evitar a dependência do módulo
- * `state/duelState.js` (abordagem intencionalmente amadora/compacta).
+ * Mantém um estado simples em memória.
  */
 let ui = {};
 
-// constantes de status e slots do jogo
-const STATUS = Object.freeze({ IDLE: "idle", PRONTO: "pronto", BATALHA: "batalha", FINALIZADO: "finalizado" });
+// status e slots do jogo
+const STATUS = Object.freeze({
+  IDLE: "idle",
+  PRONTO: "pronto",
+  BATALHA: "batalha",
+  FINALIZADO: "finalizado",
+});
+
 const SLOT_KEYS = ["player1", "player2", "player3", "player4"];
 
-// cria o estado inicial com as chaves necessárias
+// ---------- STATE ----------
+
 function initialState() {
   const build = (v) => SLOT_KEYS.reduce((acc, key) => ((acc[key] = v), acc), {});
   return {
     players: build(null),
     carregando: build(false),
     erros: build(null),
-    consultas: build("") ,
+    consultas: build(""),
     status: STATUS.IDLE,
-    // trainers: controla qual treinador está ativo e quem já marcou pronto
     trainers: {
       active: "trainer1",
       ready: { trainer1: false, trainer2: false },
@@ -31,79 +38,101 @@ function initialState() {
 
 let state = initialState();
 
-// retorna uma cópia serializada do estado para evitar mutações diretas
 function getState() {
   return JSON.parse(JSON.stringify(state));
 }
 
-// helpers de mutação do estado (nomes descritivos)
-function setStatus(newStatus) { state.status = newStatus; }
-function setLoading(slot, value) { state.carregando[slot] = Boolean(value); }
-function setError(slot, message) { state.erros[slot] = message || null; }
-function setPlayerPokemon(slot, pokemon) { state.players[slot] = pokemon; state.erros[slot] = null; }
-function clearSlot(slot) { state.players[slot] = null; state.erros[slot] = null; state.carregando[slot] = false; }
-function setQuery(slot, value) { state.consultas[slot] = String(value || ""); }
-function canBattle() { return SLOT_KEYS.every((k) => Boolean(state.players[k])); }
-function resetState() { state = initialState(); }
+// ---------- MUTATORS ----------
+
+function setStatus(v) {
+  state.status = v;
+}
+function setLoading(slot, v) {
+  state.carregando[slot] = Boolean(v);
+}
+function setError(slot, msg) {
+  state.erros[slot] = msg || null;
+}
+function setPlayerPokemon(slot, pokemon) {
+  state.players[slot] = pokemon;
+  state.erros[slot] = null;
+}
+function clearSlot(slot) {
+  state.players[slot] = null;
+  state.erros[slot] = null;
+  state.carregando[slot] = false;
+}
+function setQuery(slot, v) {
+  state.consultas[slot] = String(v || "");
+}
+function canBattle() {
+  return SLOT_KEYS.every((k) => Boolean(state.players[k]));
+}
+function resetState() {
+  state = initialState();
+}
+
+// ---------- INIT ----------
 
 function init(deps) {
-  ui = deps;
+  ui = deps || {};
   syncUI();
 }
 
-/**
- * handleBuscarPokemon
- * - valida turno do treinador
- * - salva a consulta (input) para preservação
- * - busca via `pokeService` e previne duplicatas (pré e pós-fetch)
- */
+// ---------- BUSCAR ----------
+
 async function handleBuscarPokemon({ slot, consulta }) {
   const termo = String(consulta || "").trim().toLowerCase();
 
-  // salva a consulta para preservar o valor no input
+  // preserva o input
   setQuery(slot, consulta);
 
-  // bloqueia ação se não for o treinador ativo ou se o treinador já estiver marcado como pronto
+  // valida turno
   const trainer = slot === "player1" || slot === "player2" ? "trainer1" : "trainer2";
-  const currentState = getState();
-  if (currentState.trainers.ready[trainer]) {
+  const current = getState();
+
+  if (current.trainers.ready[trainer]) {
     ui.onAlerta?.({ mensagem: "Treinador já está pronto — não pode alterar.", tipo: "erro" });
     syncUI();
     return;
   }
-  if (currentState.trainers.active !== trainer) {
+
+  if (current.trainers.active !== trainer) {
     ui.onAlerta?.({ mensagem: "Aguarde sua vez — é a vez do outro treinador.", tipo: "erro" });
     syncUI();
     return;
   }
 
-  // valida duplicata antes do fetch
-  const alreadySelected = Object.values(currentState.players).some((p) => {
+  // evita duplicados (pré-fetch)
+  const already = Object.values(current.players).some((p) => {
     if (!p) return false;
     const num = Number(termo);
     if (!Number.isNaN(num) && Number.isFinite(num)) return p.id === num;
     return (p.name || "").toLowerCase() === termo;
   });
 
-  if (alreadySelected) {
+  if (already) {
     ui.onAlerta?.({ mensagem: "Esse pokémon já foi escolhido. Escolha outro.", tipo: "erro" });
     syncUI();
     return;
   }
 
   setLoading(slot, true);
-  // limpa resultado anterior
   state.resultado = null;
   syncUI();
 
   try {
     const pokemon = await pokeService.getPokemon(consulta);
 
-    // checa duplicata após o fetch (evita corrida entre slots)
-    const afterState = getState();
-    const conflict = Object.values(afterState.players).some((p) => p && p.id === pokemon.id);
+    // evita corrida entre slots (pós-fetch)
+    const after = getState();
+    const conflict = Object.values(after.players).some((p) => p && p.id === pokemon.id);
+
     if (conflict) {
-      ui.onAlerta?.({ mensagem: "Esse pokémon já foi escolhido por outro slot. Escolha outro.", tipo: "erro" });
+      ui.onAlerta?.({
+        mensagem: "Esse pokémon já foi escolhido por outro slot. Escolha outro.",
+        tipo: "erro",
+      });
       setLoading(slot, false);
       syncUI();
       return;
@@ -111,9 +140,8 @@ async function handleBuscarPokemon({ slot, consulta }) {
 
     setPlayerPokemon(slot, pokemon);
   } catch (err) {
-    const msg = err?.message || "Erro inesperado.";
-    setPlayerPokemon(slot, null);
-    ui.onAlerta?.({ mensagem: msg, tipo: "erro" });
+    ui.onAlerta?.({ mensagem: err?.message || "Erro ao buscar Pokémon.", tipo: "erro" });
+    clearSlot(slot);
   } finally {
     setLoading(slot, false);
     setStatus(canBattle() ? STATUS.PRONTO : STATUS.IDLE);
@@ -121,59 +149,93 @@ async function handleBuscarPokemon({ slot, consulta }) {
   }
 }
 
-/**
- * handleTrocarPokemon
- * - limpa apenas o slot solicitado, respeitando turno e status de ready
- */
+// ---------- TROCAR ----------
+
 function handleTrocarPokemon({ slot }) {
   const trainer = slot === "player1" || slot === "player2" ? "trainer1" : "trainer2";
-  const currentState = getState();
-  if (currentState.trainers.ready[trainer]) {
+  const current = getState();
+
+  if (current.trainers.ready[trainer]) {
     ui.onAlerta?.({ mensagem: "Treinador pronto — não é possível trocar.", tipo: "erro" });
+    syncUI();
     return;
   }
-  if (currentState.trainers.active !== trainer) {
+
+  if (current.trainers.active !== trainer) {
     ui.onAlerta?.({ mensagem: "Aguarde sua vez para trocar.", tipo: "erro" });
+    syncUI();
     return;
   }
+
   clearSlot(slot);
   setStatus(STATUS.IDLE);
   syncUI();
 }
 
-/**
- * handleTentarNovamente
- * - limpa erro e slot para permitir nova tentativa
- */
+// ---------- TENTAR NOVAMENTE ----------
+
 function handleTentarNovamente({ slot }) {
   setError(slot, null);
   clearSlot(slot);
   syncUI();
 }
 
-/**
- * handleBatalhar
- * - apenas sinaliza início de batalha (engine não implementada aqui)
- */
+// ---------- BATALHAR 2v2 ----------
+
 function handleBatalhar() {
   if (!canBattle()) return;
+
   setStatus(STATUS.BATALHA);
   syncUI();
+
+  const time1 = [state.players.player1, state.players.player2];
+  const time2 = [state.players.player3, state.players.player4];
+
+  const estados = battleEngine.simularBatalha2v2(time1, time2);
+
+  battleView.open(estados, (estadoFinal) => {
+    const vencedor =
+      estadoFinal.vencedor === 1
+        ? "jogador1"
+        : estadoFinal.vencedor === 2
+        ? "jogador2"
+        : "empate";
+
+    state.resultado = {
+      vencedor,
+      time1: estadoFinal.time1,
+      time2: estadoFinal.time2,
+    };
+
+    setStatus(STATUS.FINALIZADO);
+    syncUI();
+
+    // abre modal de resultado na UI (se existir)
+    const p1 = estadoFinal.time1?.[estadoFinal.ativos?.[1]];
+    const p2 = estadoFinal.time2?.[estadoFinal.ativos?.[2]];
+
+    ui.onAbrirModal?.({
+      vencedor,
+      pokemon1: p1,
+      pokemon2: p2,
+    });
+  });
 }
+
+// ---------- RESET ----------
 
 function handleResetarDuelo() {
   resetState();
   syncUI();
 }
 
-/**
- * Marca treinador como pronto e passa a vez para o outro treinador.
- * Quando ambos estiverem prontos, altera status para PRONTO.
- */
+// ---------- READY ----------
+
 function handleToggleReady({ trainer }) {
-  // antes de marcar pronto, validar se o treinador preencheu seus 2 slots
-  const trainerSlots = trainer === "trainer1" ? ["player1", "player2"] : ["player3", "player4"];
-  const missing = trainerSlots.some((s) => !state.players[s]);
+  // valida se preencheu 2 slots antes de marcar pronto
+  const slots = trainer === "trainer1" ? ["player1", "player2"] : ["player3", "player4"];
+  const missing = slots.some((s) => !state.players[s]);
+
   if (missing) {
     ui.onAlerta?.({ mensagem: "Preencha os 2 slots antes de marcar pronto.", tipo: "erro" });
     syncUI();
@@ -182,21 +244,26 @@ function handleToggleReady({ trainer }) {
 
   const other = trainer === "trainer1" ? "trainer2" : "trainer1";
   state.trainers.ready[trainer] = true;
+
   if (!state.trainers.ready[other]) {
     state.trainers.active = other;
   } else {
     state.trainers.active = null;
     setStatus(canBattle() ? STATUS.PRONTO : STATUS.IDLE);
   }
+
   syncUI();
 }
 
-// sincroniza o estado com a UI (callback fornecido em init)
+// ---------- UI SYNC ----------
+
 function syncUI() {
   const copy = getState();
   ui.onAtualizarUI?.(copy);
   ui.onAtualizarBotao?.(canBattle());
 }
+
+// ---------- EXPORT ----------
 
 export const battleController = {
   init,

@@ -12,8 +12,15 @@ async function getPokemon(consulta) {
 }
 
 function mapPokemon(dados) {
-  const stats = Array.isArray(dados?.stats) ? dados.stats : [];
-  const total = stats.reduce((acc, s) => acc + (s?.base_stat ?? 0), 0);
+  const rawStats = Array.isArray(dados?.stats) ? dados.stats : [];
+  const total = rawStats.reduce((acc, s) => acc + (s?.base_stat ?? 0), 0);
+
+  // Mapeia cada stat individualmente para uso na batalha
+  const statsMap = {};
+  rawStats.forEach((s) => {
+    const nome = s?.stat?.name;
+    if (nome) statsMap[nome] = s.base_stat ?? 0;
+  });
 
   const types = Array.isArray(dados?.types)
     ? dados.types.map((t) => t?.type?.name).filter(Boolean)
@@ -23,8 +30,18 @@ function mapPokemon(dados) {
     id: dados?.id ?? 0,
     name: dados?.name ?? "desconhecido",
     sprite: dados?.sprites?.front_default ?? null,
+    spriteBack: dados?.sprites?.back_default ?? null,
+    spriteShiny: dados?.sprites?.front_shiny ?? null,
     types,
-    stats: { total },
+    stats: {
+      total,
+      hp: statsMap["hp"] ?? 0,
+      attack: statsMap["attack"] ?? 0,
+      defense: statsMap["defense"] ?? 0,
+      spAttack: statsMap["special-attack"] ?? 0,
+      spDefense: statsMap["special-defense"] ?? 0,
+      speed: statsMap["speed"] ?? 0,
+    },
   };
 }
 

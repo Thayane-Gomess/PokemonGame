@@ -1,5 +1,6 @@
 import { arenaView } from "./ui/arenaView.js";
 import { modalView } from "./ui/modalView.js";
+import { battleView } from "./ui/battleView.js";
 import { battleController } from "./controllers/battleController.js";
 
 arenaView.init({
@@ -21,7 +22,10 @@ arenaView.renderBotaoBatalhar(false);
 // depois inicializa o controller que vai sincronizar o estado e preencher os slots
 battleController.init({
   onAtualizarUI: arenaView.render,
-  onAbrirModal: modalView.open,
   onAtualizarBotao: arenaView.renderBotaoBatalhar,
   onAlerta: arenaView.alerta,
+
+  onAbrirModal: (resultado) => {
+    modalView.open(resultado);
+  },
 });
