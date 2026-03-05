@@ -1,0 +1,206 @@
+/* Tablets e dispositivos menores */
+@media (max-width: 768px) {
+  /* Arena */
+  #arena-root {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+
+  .page-title {
+    font-size: var(--font-size-2xl);
+    letter-spacing: 1px;
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .battle-zone {
+    padding: var(--spacing-md);
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .btn-commander {
+    font-size: var(--font-size-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+    min-width: 200px;
+  }
+
+  .selection-modal {
+    padding: var(--spacing-xl);
+    max-height: 85vh;
+  }
+
+  .selection-modal__grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .selection-modal__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .battle-result {
+    padding: var(--spacing-xl);
+  }
+
+  .battle-result__title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .toast {
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    left: var(--spacing-md);
+    max-width: calc(100% - 2rem);
+  }
+}
+
+/* Smartphones */
+@media (max-width: 480px) {
+  /* Main */
+  main {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+
+  /* Header */
+  .page-header {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+
+  .page-title {
+    font-size: var(--font-size-xl);
+    letter-spacing: 0.5px;
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Battle zone */
+  .battle-zone {
+    padding: var(--spacing-sm);
+  }
+
+  .trainer-name {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Card final */
+  .card-final {
+    padding: var(--spacing-sm);
+  }
+
+  .card-final h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .card-final img {
+    max-height: 100px;
+  }
+
+  .card-final p {
+    font-size: var(--font-size-xs);
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* Input group */
+  .input-group {
+    padding: var(--spacing-lg);
+    min-height: 200px;
+  }
+
+  .input-group input {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Pokemon selector */
+  .pokemon-selector {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .pokemon-selector__input,
+  .pokemon-selector__button {
+    width: 100%;
+  }
+
+  /* Botão batalhar */
+  .btn-commander {
+    font-size: var(--font-size-base);
+    padding: var(--spacing-md);
+    min-width: auto;
+    width: 100%;
+  }
+
+  .actions-hint {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Modal */
+  .selection-modal {
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+  }
+
+  .selection-modal__header {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .selection-modal__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .selection-modal__grid {
+    gap: var(--spacing-sm);
+  }
+
+  /* Modal box */
+  .modal-box {
+    padding: var(--spacing-lg);
+  }
+
+  .win-title {
+    font-size: var(--font-size-xl);
+    letter-spacing: 1px;
+  }
+
+  .win-score {
+    font-size: var(--font-size-xl);
+  }
+
+  /* Footer */
+  .page-footer {
+    padding: var(--spacing-md);
+  }
+
+  .page-footer small {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Telas grandes */
+@media (min-width: 1200px) {
+  .pokemon-slots {
+    gap: var(--spacing-lg);
+  }
+
+  .selection-modal__grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Preferências de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
