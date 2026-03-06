@@ -13,7 +13,6 @@
   width: 100%;
 }
 
-/* aguardando input do usuário */
 .input-group--aguardando {
   animation: slideInUp 0.4s ease;
 }
@@ -108,23 +107,25 @@
   transform: scale(0.98);
 }
 
-/* card do pokémon selecionado com nova experiência visual */
 .card-pokemon {
-  background-color: var(--color-bg-white);
-  border: 3px solid var(--color-border-primary);
+  background: #ffffff;
+  border: 3px solid #000000;
   border-radius: var(--border-radius-md);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-card);
-  transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-md);
-  min-height: 300px;
+  min-height: 280px;
   width: 100%;
-  animation: bounceIn 0.5s ease;
-  position: relative;
+  min-width: 0;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.card-pokemon__imagem {
+  width: clamp(80px, 8vw, 120px);
+  height: clamp(80px, 8vw, 120px);
+  object-fit: contain;
 }
 
 .card-pokemon:hover {
@@ -152,13 +153,6 @@
   min-height: 120px;
 }
 
-.card-pokemon__imagem {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-}
-
 .card-pokemon__nome {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -166,6 +160,7 @@
   letter-spacing: 1px;
   color: var(--color-text-primary);
   margin: 0;
+  text-align: center;
 }
 
 .card-pokemon__info {
@@ -203,7 +198,6 @@
   font-weight: 700;
 }
 
-/* estado de carregamento */
 .slot-loading {
   display: flex;
   flex-direction: column;
@@ -223,7 +217,6 @@
   animation: spin 1s linear infinite;
 }
 
-/* único spin (serve para .spinner e .loading) */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -237,7 +230,6 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* pulse do texto (loading) */
 @keyframes pulse {
   0%,
   100% {
@@ -248,7 +240,6 @@
   }
 }
 
-/* estado de erro */
 .slot-erro {
   background-color: #ffebee;
   border: 2px solid #ef5350;
@@ -277,22 +268,23 @@
   margin: 0;
 }
 
-/* modal */
 .modal-box {
   background-color: var(--color-bg-white);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-2xl);
-  max-width: 500px;
-  width: 100%;
+  width: min(560px, 100%);
+  max-height: min(85vh, 760px);
+  overflow: auto;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   animation: modalSlideIn 0.3s ease;
+  margin: 0 auto;
 }
 
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(-20px);
+    transform: scale(0.95) translateY(8px);
   }
   to {
     opacity: 1;
@@ -371,7 +363,6 @@
   margin-top: var(--spacing-md);
 }
 
-/* Animação de hover para cards (não pode usar o mesmo nome "pulse") */
 @keyframes pulseHover {
   0%,
   100% {
@@ -386,9 +377,8 @@
   animation: pulseHover 0.5s ease-in-out;
 }
 
-/* ---- Modal de resultado da batalha ---- */
 .resultado-modal {
-  max-width: 560px;
+  width: min(640px, 100%);
 }
 
 .resultado-icone {
@@ -456,6 +446,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--color-text-primary);
+  text-align: center;
 }
 
 .resultado-hp-bar {
@@ -499,4 +490,20 @@
   font-weight: 900;
   color: var(--color-accent-red);
   letter-spacing: 2px;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .modal-box {
+    padding: var(--spacing-xl);
+  }
+
+  .resultado-pokemons {
+    grid-template-columns: 1fr;
+  }
+
+  .resultado-vs {
+    order: -1;
+    margin: 6px 0;
+  }
 }

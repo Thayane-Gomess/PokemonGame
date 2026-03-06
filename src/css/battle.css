@@ -1,30 +1,116 @@
 /* ============================================================
-   battle.css — Estilos da tela de batalha animada
+   battle.css — Estilos da tela de batalha (modal/overlay)
+   Alvo real no seu HTML: #modal-root.modal-overlay
+   Estratégia: aplicar overlay FIXO somente quando houver .battle-screen dentro.
    ============================================================ */
 
-/* ---- Tela de batalha (modal) ---- */
+/* =========================
+   TOKENS (fallbacks)
+   ========================= */
+:root {
+  /* Fallbacks seguros caso algo falte no base.css */
+  --spacing-xs: 6px;
+  --spacing-sm: 10px;
+  --spacing-md: 14px;
+  --spacing-lg: 18px;
+  --spacing-xl: 24px;
+
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+}
+
+/* ============================================================
+   OVERLAY: usa o #modal-root que já existe no HTML
+   O problema do "aparecer embaixo" vem de overlay fora do fixed.
+   Aqui garantimos: FIXO + centralização + blur + z-index alto
+   Mas SOMENTE quando for batalha: :has(.battle-screen)
+   ============================================================ */
+
+#modal-root.modal-overlay:has(.battle-screen) {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  /* o layout.css já controla display none/flex via is-open/aria-hidden
+     então aqui só garantimos que quando estiver aberto ele centraliza bem */
+  align-items: center;
+  justify-content: center;
+
+  padding: var(--spacing-lg, 18px);
+  background: rgba(0, 0, 0, 0.55);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Quando o modal estiver aberto, assegura flex (compat com seu layout.css) */
+#modal-root.modal-overlay.is-open:has(.battle-screen),
+#modal-root.modal-overlay[aria-hidden="false"]:has(.battle-screen) {
+  display: flex;
+}
+
+/* Dica opcional (se você quiser travar scroll via JS):
+   document.body.classList.add('is-battle-open')
+*/
+body.is-battle-open {
+  overflow: hidden;
+}
+
+/* ============================================================
+   Tela de batalha (modal)
+   ============================================================ */
 .battle-screen {
   background: linear-gradient(160deg, #0f0c29, #302b63, #24243e);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  width: 100%;
-  max-width: 900px;
+  border-radius: var(--border-radius-lg, 16px);
+
+  padding: var(--spacing-xl, 24px);
+
+  width: min(900px, 100%);
   max-height: 92vh;
-  overflow-y: auto;
+
+  /* scroll interno do modal (não da página) */
+  overflow: auto;
+
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-lg, 18px);
+
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
   animation: battleOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
   color: #fff;
+
+  /* evita estouro de grid/flex interno */
+  min-width: 0;
 }
 
 @keyframes battleOpen {
-  from { opacity: 0; transform: scale(0.85) translateY(30px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0);     }
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* ---- Header ---- */
+/* Scrollbar (opcional) */
+.battle-screen::-webkit-scrollbar {
+  width: 8px;
+}
+.battle-screen::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+}
+.battle-screen::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+}
+
+/* =========================
+   Header
+   ========================= */
 .battle-header {
   text-align: center;
 }
@@ -40,29 +126,49 @@
 }
 
 @keyframes titleGlow {
-  from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 2px 2px 0 #000; }
-  to   { text-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 2px 2px 0 #000; }
+  from {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 2px 2px 0 #000;
+  }
+  to {
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 2px 2px 0 #000;
+  }
 }
 
-/* ---- Campo de batalha ---- */
+/* =========================
+   Campo de batalha
+   ========================= */
 .battle-field {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  gap: var(--spacing-md);
+  gap: var(--spacing-md, 14px);
   align-items: center;
+
+  min-width: 0;
 }
 
-/* ---- Combatente ---- */
+.battle-field > * {
+  min-width: 0;
+}
+
+/* =========================
+   Combatente (cards)
+   ========================= */
 .battle-combatant {
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg, 16px);
+  padding: var(--spacing-md, 14px);
+
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  transition: all 0.3s ease;
+  gap: var(--spacing-sm, 10px);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  min-width: 0;
 }
 
 .battle-combatant--p1 {
@@ -82,22 +188,30 @@
 }
 
 @keyframes winnerPulse {
-  from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
-  to   { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9); }
+  from {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  }
+  to {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
+  }
 }
 
-/* ---- Info do combatente ---- */
+/* =========================
+   Info do combatente
+   ========================= */
 .battle-combatant__info {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .battle-combatant__name-row {
   display: flex;
   align-items: baseline;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-sm, 10px);
   justify-content: space-between;
+  min-width: 0;
 }
 
 .battle-combatant__name {
@@ -106,12 +220,18 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #fff;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .battle-combatant__level {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .battle-combatant__types {
@@ -120,20 +240,24 @@
   flex-wrap: wrap;
 }
 
-/* ---- Badge de tipo ---- */
+/* Badge de tipo */
 .battle-type-badge {
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
   padding: 2px 8px;
   border-radius: 20px;
+
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* ---- Barra de HP ---- */
+/* =========================
+   HP
+   ========================= */
 .battle-hp-bar-container {
   display: flex;
   flex-direction: column;
@@ -164,7 +288,9 @@
   box-shadow: 0 0 8px currentColor;
 }
 
-/* ---- Sprite do Pokémon ---- */
+/* =========================
+   Sprites
+   ========================= */
 .battle-combatant__sprite-wrapper {
   display: flex;
   align-items: center;
@@ -176,101 +302,93 @@
 .battle-sprite {
   width: clamp(80px, 12vw, 140px);
   height: clamp(80px, 12vw, 140px);
+
   object-fit: contain;
   image-rendering: pixelated;
+
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
   transition: transform 0.3s ease, filter 0.3s ease;
+
+  --mirror: 1;
 }
 
 .battle-sprite--p1 {
   transform: scaleX(1);
+  --mirror: 1;
 }
 
 .battle-sprite--p2 {
-  transform: scaleX(-1); /* espelha o sprite do oponente */
+  transform: scaleX(-1);
+  --mirror: -1;
 }
 
-/* Animação de ataque */
+/* Ataque */
 .battle-sprite--attacking {
   animation: attackAnim 0.5s ease !important;
 }
 
 @keyframes attackAnim {
-  0%   { transform: scaleX(var(--mirror, 1)) translateX(0);    }
-  30%  { transform: scaleX(var(--mirror, 1)) translateX(20px); }
-  60%  { transform: scaleX(var(--mirror, 1)) translateX(-5px); }
-  100% { transform: scaleX(var(--mirror, 1)) translateX(0);    }
+  0% {
+    transform: scaleX(var(--mirror, 1)) translateX(0);
+  }
+  30% {
+    transform: scaleX(var(--mirror, 1)) translateX(30px);
+  }
+  60% {
+    transform: scaleX(var(--mirror, 1)) translateX(-8px);
+  }
+  100% {
+    transform: scaleX(var(--mirror, 1)) translateX(0);
+  }
 }
 
-.battle-sprite--p1.battle-sprite--attacking {
-  animation: attackAnimP1 0.5s ease !important;
-}
-
-.battle-sprite--p2.battle-sprite--attacking {
-  animation: attackAnimP2 0.5s ease !important;
-}
-
-@keyframes attackAnimP1 {
-  0%   { transform: scaleX(1) translateX(0);    }
-  30%  { transform: scaleX(1) translateX(30px); }
-  60%  { transform: scaleX(1) translateX(-8px); }
-  100% { transform: scaleX(1) translateX(0);    }
-}
-
-@keyframes attackAnimP2 {
-  0%   { transform: scaleX(-1) translateX(0);    }
-  30%  { transform: scaleX(-1) translateX(-30px); }
-  60%  { transform: scaleX(-1) translateX(8px);  }
-  100% { transform: scaleX(-1) translateX(0);    }
-}
-
-/* Animação de dano (hit) */
+/* Dano (hit) */
 .battle-sprite--hit {
   animation: hitAnim 0.5s ease !important;
 }
 
 @keyframes hitAnim {
-  0%   { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)) brightness(1);   }
-  25%  { filter: drop-shadow(0 0 20px rgba(255,0,0,0.9)) brightness(3);   }
-  50%  { filter: drop-shadow(0 0 20px rgba(255,0,0,0.9)) brightness(0.5); }
-  75%  { filter: drop-shadow(0 0 20px rgba(255,0,0,0.9)) brightness(3);   }
-  100% { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)) brightness(1);   }
+  0% {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) brightness(1);
+  }
+  25% {
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.9)) brightness(3);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.9)) brightness(0.5);
+  }
+  75% {
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.9)) brightness(3);
+  }
+  100% {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) brightness(1);
+  }
 }
 
-/* Animação de derrota (desmaiou) */
+/* Derrota (fainted) */
 .battle-sprite--fainted {
   animation: faintAnim 0.8s ease forwards !important;
 }
 
 @keyframes faintAnim {
-  0%   { transform: scaleX(var(--mirror-p2, 1)) translateY(0)   opacity(1); }
-  100% { transform: scaleX(var(--mirror-p2, 1)) translateY(60px); opacity: 0; }
+  0% {
+    transform: scaleX(var(--mirror, 1)) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(var(--mirror, 1)) translateY(60px);
+    opacity: 0;
+  }
 }
 
-.battle-sprite--p1.battle-sprite--fainted {
-  animation: faintAnimP1 0.8s ease forwards !important;
-}
-
-.battle-sprite--p2.battle-sprite--fainted {
-  animation: faintAnimP2 0.8s ease forwards !important;
-}
-
-@keyframes faintAnimP1 {
-  0%   { transform: scaleX(1)  translateY(0);   opacity: 1; }
-  100% { transform: scaleX(1)  translateY(60px); opacity: 0; }
-}
-
-@keyframes faintAnimP2 {
-  0%   { transform: scaleX(-1) translateY(0);   opacity: 1; }
-  100% { transform: scaleX(-1) translateY(60px); opacity: 0; }
-}
-
-/* ---- VS central ---- */
+/* =========================
+   VS central
+   ========================= */
 .battle-vs {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-sm, 10px);
 }
 
 .battle-vs__text {
@@ -285,41 +403,46 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
+
   padding: 4px 12px;
+
   font-size: 0.7rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.8);
+
   letter-spacing: 0.5px;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-/* ---- Log de batalha ---- */
+/* =========================
+   Log de batalha
+   ========================= */
 .battle-log-container {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-md, 12px);
   overflow: hidden;
 }
 
 .battle-log {
   max-height: 150px;
   overflow-y: auto;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md, 14px);
+
   display: flex;
   flex-direction: column;
   gap: 4px;
+
   scroll-behavior: smooth;
 }
 
 .battle-log::-webkit-scrollbar {
   width: 4px;
 }
-
 .battle-log::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
 }
-
 .battle-log::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
@@ -334,8 +457,14 @@
 }
 
 @keyframes logEntryIn {
-  from { opacity: 0; transform: translateX(-10px); }
-  to   { opacity: 1; transform: translateX(0);     }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .battle-log__entry--system {
@@ -373,28 +502,37 @@
   background: transparent;
 }
 
-/* ---- Controles ---- */
+/* =========================
+   Controles / botões
+   ========================= */
 .battle-controls {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-md, 14px);
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .btn-battle {
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-md, 14px) var(--spacing-xl, 24px);
   border: none;
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-md, 12px);
+
   font-weight: 700;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+
   font-family: inherit;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.btn-battle:active {
+  transform: translateY(1px);
 }
 
 .btn-battle--attack {
@@ -402,9 +540,8 @@
   color: #fff;
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
-
 .btn-battle--attack:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  filter: brightness(1.05);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
 }
@@ -414,9 +551,8 @@
   color: #fff;
   box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
 }
-
 .btn-battle--auto:hover {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  filter: brightness(1.05);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
 }
@@ -431,17 +567,18 @@
   color: #fff;
   box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
 }
-
 .btn-battle--close:hover {
-  background: linear-gradient(135deg, #10b981, #059669);
+  filter: brightness(1.05);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5);
 }
 
-/* ---- Responsivo ---- */
+/* =========================
+   Responsivo
+   ========================= */
 @media (max-width: 640px) {
   .battle-screen {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md, 14px);
     max-height: 95vh;
   }
 
@@ -459,6 +596,7 @@
   .battle-combatant {
     flex-direction: row;
     align-items: center;
+    gap: var(--spacing-md, 14px);
   }
 
   .battle-combatant__info {
@@ -475,11 +613,11 @@
   }
 
   .battle-log {
-    max-height: 100px;
+    max-height: 110px;
   }
 
   .btn-battle {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-sm, 10px) var(--spacing-md, 14px);
     font-size: 0.8rem;
   }
 }

@@ -1,13 +1,12 @@
 const BASE_URL = "https://pokeapi.co/api/v2/pokemon";
-const TOTAL_POKEMON = 898; // geração 1 a 8
+const TOTAL_POKEMON = 898;
 
 /**
- * Busca e normaliza um Pokémon da PokeAPI.
- * @param {string|number} consulta - Nome ou ID do Pokémon
- * @returns {Promise<Pokemon>}
- */
+ * Busca e normaliza um Pokémon da PokéAPI.
+*/
 async function getPokemon(consulta) {
   const termo = String(consulta || "").trim().toLowerCase();
+
   if (!termo) {
     const err = new Error("Digite o nome ou o ID do Pokémon.");
     err.status = 400;
@@ -28,8 +27,8 @@ async function getPokemon(consulta) {
     throw err;
   }
 
-  const dados = await res.json();
-  return normalizar(dados);
+  const data = await res.json();
+  return mapPokemon(data);
 }
 
 /**
@@ -41,59 +40,39 @@ async function getRandomPokemon() {
   return getPokemon(id);
 }
 
-/**
- * Normaliza os dados brutos da PokéAPI para o formato do simulador.
- * @param {object} dados - Resposta bruta da PokéAPI
- * @returns {Pokemon}
- */
-function normalizar(dados) {
-  // Stats individuais
-  const statsMap = {};
-  const statsRaw = Array.isArray(dados?.stats) ? dados.stats : [];
 
-  for (const s of statsRaw) {
-    const nomeStat = s?.stat?.name;
-    if (nomeStat) {
-      statsMap[nomeStat] = s?.base_stat ?? 0;
-    }
-  }
+function mapPokemon(data) {
+  const id = Number(data?.id ?? 0);
+  const name = String(data?.name ?? "unknown");
 
-  const total = Object.values(statsMap).reduce((acc, v) => acc + v, 0);
-
-  // Types
-  const tipos = Array.isArray(dados?.types)
-    ? dados.types.map((t) => t?.type?.name).filter(Boolean)
+  const types = Array.isArray(data?.types)
+    ? data.types.map((t) => t?.type?.name).filter(Boolean)
     : [];
 
-  // Sprites (inclui extras úteis)
-  const sprites = {
-    frente: dados?.sprites?.front_default ?? null,
-    costas: dados?.sprites?.back_default ?? null,
-    frenteShiny: dados?.sprites?.front_shiny ?? null,
-    artwork:
-      dados?.sprites?.other?.["official-artwork"]?.front_default ?? null,
+  const sprite =
+    data?.sprites?.front_default ??
+    data?.sprites?.other?.["official-artwork"]?.front_default ??
+    null;
+
+  const statsRaw = Array.isArray(data?.stats) ? data.stats : [];
+  const total = statsRaw.reduce((acc, s) => acc + (s?.base_stat ?? 0), 0);
+
+  const normalized = {
+    id,
+    name,
+    sprite,
+    types,
+    stats: { total },
+
+    
+    nome: name,
+    tipos: types,
   };
 
-  // Cry (som)
-  const cry = dados?.cries?.latest ?? dados?.cries?.legacy ?? null;
-
-  return {
-    id: dados?.id ?? 0,
-    nome: dados?.name ?? "desconhecido",
-    tipos,
-    sprite: sprites.frente, // compatibilidade com quem usa `sprite` direto
-    sprites,
-    cry,
-    stats: {
-      hp: statsMap["hp"] ?? 0,
-      ataque: statsMap["attack"] ?? 0,
-      defesa: statsMap["defense"] ?? 0,
-      ataqueEspecial: statsMap["special-attack"] ?? 0,
-      defesaEspecial: statsMap["special-defense"] ?? 0,
-      velocidade: statsMap["speed"] ?? 0,
-      total,
-    },
-  };
+  return normalized;
 }
 
-export { getPokemon, getRandomPokemon };
+export const pokeService = {
+  getPokemon,
+  getRandomPokemon,
+};

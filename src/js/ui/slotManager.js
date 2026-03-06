@@ -100,9 +100,10 @@ function criarSlot(slot) {
     },
 
     renderCard(container, pokemon, enabled = true) {
-      const name = pokemon?.name || 'desconhecido';
-      const total = pokemon?.stats?.total ?? 0;
-      const sprite = pokemon?.sprite || '';
+const name = pokemon?.name || pokemon?.nome || "desconhecido";
+const types = pokemon?.types || pokemon?.tipos || [];
+const total = pokemon?.stats?.total ?? 0;
+const sprite = pokemon?.sprite || "";
       container.innerHTML = `
         <article class="card-pokemon" aria-label="pokémon selecionado: ${name}">
           <div class="card-pokemon__conteudo">

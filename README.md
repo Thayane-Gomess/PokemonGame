@@ -1,119 +1,279 @@
-🎮 Pokémon Battle — API
-Backend REST para o Pokémon Battle Simulator.
-Atua como proxy da PokéAPI e centraliza toda a lógica de batalha.
+Pokémon Card Battle
 
-🚀 Como rodar
-# 1. Instale as dependências
+Um jogo web inspirado nos duelos de cartas colecionáveis dos anos 2000, onde cada jogador seleciona cartas Pokémon e disputa uma batalha baseada em atributos extraídos da PokéAPI.
+
+O objetivo do projeto é demonstrar integração com API externa, arquitetura modular em JavaScript e organização de frontend em camadas, simulando a estrutura utilizada em aplicações profissionais.
+
+O sistema consome dados reais da API Pokémon, transforma esses dados em atributos de batalha e executa um motor de comparação para determinar o vencedor.
+
+Demonstração
+
+Fluxo do jogo:
+
+O usuário seleciona dois Pokémon
+
+Cada Pokémon representa uma carta de batalha
+
+Os atributos são carregados da API
+
+O motor de batalha compara os valores
+
+O sistema determina o vencedor da rodada
+
+A lógica foi pensada para reproduzir a sensação dos duelos de cartas clássicos, onde cada carta possui atributos que determinam o resultado da disputa.
+
+Objetivos do Projeto
+
+Este projeto foi desenvolvido com foco em:
+
+Consumo de API REST externa
+
+Separação de responsabilidades no frontend
+
+Organização de código em camadas
+
+Estrutura escalável para aplicações JavaScript
+
+Simulação de uma lógica de regra de negócio
+
+Experiência interativa baseada em dados dinâmicos
+
+Também foi pensado como um exercício de arquitetura frontend profissional, separando claramente:
+
+interface
+
+lógica de controle
+
+serviços externos
+
+Tecnologias Utilizadas
+Linguagens
+
+JavaScript
+
+HTML5
+
+CSS3
+
+API
+
+PokéAPI
+https://pokeapi.co
+
+Ferramentas
+
+Node.js (servidor local)
+
+Fetch API
+
+Modularização ES Modules
+
+Arquitetura do Projeto
+
+O projeto segue uma arquitetura modular inspirada em padrões utilizados em aplicações modernas.
+
+src
+│
+├── js
+│   ├── controllers
+│   │   └── battleController.js
+│   │
+│   ├── services
+│   │   ├── pokeService.js
+│   │   ├── typeService.js
+│   │   ├── battleService.js
+│   │   └── battleEngine.js
+│   │
+│   ├── ui
+│   │   ├── arenaView.js
+│   │   ├── battleView.js
+│   │   ├── modalView.js
+│   │   └── slotManager.js
+│   │
+│   └── main.js
+│
+└── css
+    ├── base.css
+    ├── components.css
+    ├── battle.css
+    ├── layout.css
+    └── responsive.css
+Camadas da Aplicação
+UI Layer
+
+Responsável pela interface e interação com o usuário.
+
+Arquivos:
+
+arenaView.js
+
+battleView.js
+
+modalView.js
+
+slotManager.js
+
+Responsabilidades:
+
+renderizar componentes
+
+atualizar DOM
+
+mostrar resultados da batalha
+
+gerenciar modais e slots de cartas
+
+Controller Layer
+
+Responsável por coordenar o fluxo da aplicação.
+
+Arquivo:
+
+battleController.js
+
+Funções:
+
+iniciar batalhas
+
+coletar cartas selecionadas
+
+chamar o motor de batalha
+
+enviar resultado para a interface
+
+Service Layer
+
+Responsável pela lógica e comunicação com APIs externas.
+
+Arquivos:
+
+pokeService.js
+typeService.js
+battleService.js
+battleEngine.js
+
+Funções:
+
+pokeService
+
+Comunicação com a PokéAPI
+
+buscar dados de Pokémon
+
+transformar resposta da API em estrutura utilizável
+
+typeService
+
+Gerencia interações entre tipos de Pokémon.
+
+Exemplo:
+
+fogo > planta
+
+água > fogo
+
+Permite adicionar regras de vantagem estratégica.
+
+battleEngine
+
+Motor principal da batalha.
+
+Responsável por:
+
+calcular atributos
+
+comparar cartas
+
+determinar vencedor
+
+battleService
+
+Orquestra o fluxo da batalha entre:
+
+dados da API
+
+motor de batalha
+
+controller
+
+Fluxo de Execução
+
+Fluxo simplificado da aplicação:
+
+Usuário seleciona Pokémon
+        ↓
+slotManager registra seleção
+        ↓
+battleController inicia batalha
+        ↓
+pokeService busca dados da API
+        ↓
+battleEngine calcula resultado
+        ↓
+battleView exibe vencedor
+Estrutura Visual
+
+A interface foi pensada para remeter aos jogos de cartas clássicos.
+
+Componentes principais:
+
+área de seleção de cartas
+
+arena de batalha
+
+resultado da rodada
+
+modais de seleção de Pokémon
+
+O layout foi construído para ser responsivo e modular, permitindo expansão futura.
+
+Como Executar o Projeto
+1. Clonar o repositório
+git clone https://github.com/seu-usuario/pokemon-card-battle.git
+2. Entrar na pasta
+cd pokemon-card-battle
+3. Instalar dependências (se houver)
 npm install
+4. Executar servidor local
 
-# 2. Copie o arquivo de variáveis de ambiente
-cp .env.example .env
+Caso esteja usando Node:
 
-# 3. Inicie o servidor
-npm start          # produção
-npm run dev        # desenvolvimento (hot reload)
-O servidor sobe em http://localhost:3000.
+node server.js
 
-📋 Endpoints
-GET /api/health
-Verifica se a API está online.
+Ou com extensão Live Server no VSCode.
 
-Resposta:
+5. Abrir no navegador
+http://localhost:3000
+Melhorias Futuras
 
-{ "status": "ok", "timestamp": "...", "versao": "1.0.0" }
-GET /api/pokemon/:nome
-Busca um Pokémon pelo nome ou ID.
+Possíveis evoluções do projeto:
 
-Exemplo: GET /api/pokemon/pikachu ou GET /api/pokemon/25
+sistema de pontos por rodada
 
-Resposta de sucesso (200):
+múltiplas batalhas em sequência
 
-{
-  "id": 25,
-  "nome": "pikachu",
-  "tipos": ["electric"],
-  "sprite": "https://raw.githubusercontent.com/.../pikachu.png",
-  "sprites": {
-    "frente": "...",
-    "frenteShiny": "...",
-    "artwork": "..."
-  },
-  "cry": "https://raw.githubusercontent.com/.../25.ogg",
-  "stats": {
-    "hp": 35,
-    "ataque": 55,
-    "defesa": 40,
-    "ataqueEspecial": 50,
-    "defesaEspecial": 50,
-    "velocidade": 90,
-    "total": 320
-  }
-}
-Erros possíveis:
+ranking de jogadores
 
-Código	Mensagem
-400	"Informe o nome ou ID do Pokémon."
-404	"Pokémon não encontrado."
-502	"Erro ao acessar a PokéAPI."
-GET /api/pokemon/random
-Retorna um Pokémon aleatório (IDs 1–898).
+animações de batalha
 
-Resposta: Mesmo formato do endpoint acima.
+sistema de decks
 
-POST /api/batalha
-Calcula o resultado da batalha entre dois jogadores.
+persistência de partidas
 
-Body:
+modo multiplayer
 
-{
-  "jogador1": [
-    { "id": 6, "nome": "charizard", "tipos": ["fire","flying"], "stats": { "total": 534 } },
-    { "id": 9, "nome": "blastoise", "tipos": ["water"], "stats": { "total": 530 } }
-  ],
-  "jogador2": [
-    { "id": 3, "nome": "venusaur", "tipos": ["grass","poison"], "stats": { "total": 525 } },
-    { "id": 94, "nome": "gengar", "tipos": ["ghost","poison"], "stats": { "total": 500 } }
-  ]
-}
-Resposta (200):
+Aprendizados Técnicos
 
-{
-  "vencedor": "jogador1",
-  "pontos": { "jogador1": 1277, "jogador2": 1025 },
-  "statsBrutos": { "jogador1": 1064, "jogador2": 1025 },
-  "multiplicadores": { "jogador1": 1.2, "jogador2": 1.0 },
-  "detalhes": {
-    "jogador1": [...],
-    "jogador2": [...]
-  }
-}
-Valores do campo vencedor: "jogador1" | "jogador2" | "empate"
+Durante o desenvolvimento deste projeto foram praticados conceitos importantes como:
 
-GET /api/tipos/vantagem?atacante=fire&defensor=grass
-Consulta o multiplicador de tipo entre dois tipos.
+consumo de APIs REST
 
-Resposta (200):
+modularização em JavaScript
 
-{
-  "atacante": "fire",
-  "defensor": "grass",
-  "multiplicador": 2,
-  "descricao": "Vantagem! Bônus de 100% aplicado."
-}
-🧠 Lógica de Batalha
-Soma os base stats totais dos 2 Pokémon de cada jogador.
-Verifica vantagem de tipo: se algum tipo do time A é super efetivo contra algum tipo do time B, aplica bônus de 10% a 20% nos stats finais.
-Compara as pontuações finais e declara o vencedor.
-🛠️ Stack
-Node.js 18+ (ESModules)
-Express 4
-CORS
-PokéAPI (fonte de dados)
+organização de código em camadas
 
-## Contribuição individual (até 400 caracteres)
-- **Cael:** _[preencher]_
-- **Maxine:** _[preencher]_
-- **Samuel:** _[API ]_
-- **Jeferson:** _[preencher]_
-- **Thayane:** _[preencher]_
-- **Eduarda:** _[preencher]_
+separação de responsabilidades
+
+estruturação de lógica de negócio
+
+manipulação dinâmica do DOM
