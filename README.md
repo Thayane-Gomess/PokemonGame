@@ -277,3 +277,5 @@ separação de responsabilidades
 estruturação de lógica de negócio
 
 manipulação dinâmica do DOM
+
+Alteração 
